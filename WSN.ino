@@ -7,6 +7,7 @@
         huge voltage spikes when reconnecting the load and the duty cycle is already high
     2. Create custom debug logger object. Should be able to, anywhere in the code, set a debug
        level (info, warn, error, etc) and log it to the serial monitor
+    3. Create FSM for monitoring output voltage. States are OverVoltage, UnderVoltage, Steady
        
 */
 
@@ -38,8 +39,8 @@ DutyCycle_t currentDutyCycle = 0; // Start at 0%
 const DutyCycle_t MAX_DC = 60;    // Acts as a software-based kill switch
 
 // Circuit components (reference schematic)
-Resistance_t R5 = 780;  // ADC voltage divider
-Resistance_t R6 = 1000; // ADC voltage divider
+Resistance_t R5 = 3900; // ADC voltage divider
+Resistance_t R6 = 1950; // ADC voltage divider
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
 const Voltage_t D3 = 0.580f; // Measure with multimeter
@@ -69,11 +70,12 @@ void loop() {
 
   DutyCycle_t nextDutyCycle;
 
-  if (boostOutput < NOMINAL_BATTERY) {
+  // TODO #3
+  if (boostOutput < BOOST_STD_OUTPUT) {
     // Increase duty cycle
     nextDutyCycle = currentDutyCycle + 1;
   }
-  else if (boostOutput > NOMINAL_BATTERY) {
+  else if (boostOutput > BOOST_STD_OUTPUT) {
     // Decrease duty cycle
     nextDutyCycle = currentDutyCycle - 1;
   }
@@ -126,7 +128,7 @@ Voltage_t measureBoostVoltage() {
 // DEPRECATED
 Voltage_t calculateBatteryVoltage() {
   
-
+  return 0;
   // Calculate current through
   //return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
 }
