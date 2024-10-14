@@ -22,7 +22,6 @@
 typedef const byte Pin_t;       // Arduino in/out pins
 typedef const float Voltage_t;  // Constant & variable/measured voltage sources
 typedef const int Resistance_t; // Resistors
-typedef const float Current_t;  // Current (mainly for calculations)
 typedef byte DutyCycle_t;       // As whole ints (30% duty cycle: DutyCycle_t dc = 30;)
 
 // TODO: Analog/Input Pin definitions
@@ -63,18 +62,18 @@ void setup() {
 }
 
 void loop() {
-  // Calculate actual battery voltage
-  Voltage_t reference = calculateBatteryVoltage();
+  // Get Boost Converter Output
+  Voltage_t boostOutput = measureBoostVoltage();
 
   // TODO #1
 
   DutyCycle_t nextDutyCycle;
 
-  if (reference < NOMINAL_BATTERY) {
+  if (boostOutput < NOMINAL_BATTERY) {
     // Increase duty cycle
     nextDutyCycle = currentDutyCycle + 1;
   }
-  else if (reference > NOMINAL_BATTERY) {
+  else if (boostOutput > NOMINAL_BATTERY) {
     // Decrease duty cycle
     nextDutyCycle = currentDutyCycle - 1;
   }
@@ -112,14 +111,16 @@ void configureDutyCycle() {
 }
 
 /// Returns the output to the Boost Converter
+/// Refer to the "Boost Converter Output Voltage" equation/derivation in the README
 Voltage_t measureBoostVoltage() {
 
   // Read the reference voltage. Resistors chosen such that this input is always less than 5V
-  Voltage_t boostReference = analogRead(PIN_BOOST_REF) * 5f / 1023.0f;
+  Voltage_t Ref = analogRead(PIN_BOOST_REF) * 5 / 1023.0f;
 
-  // Calculate current
+  // Use equation to get output voltage
+  Voltage_t boostOutputVoltage = (Ref * (R5 + R6)) / R6 + D3;
   
-  return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
+  return boostOutputVoltage;
 }
 
 // DEPRECATED
@@ -127,7 +128,7 @@ Voltage_t calculateBatteryVoltage() {
   
 
   // Calculate current through
-  return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
+  //return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
 }
 
 void setPWM_DutyCycle(DutyCycle_t dc) {
