@@ -38,7 +38,7 @@ typedef enum {
 } regulator_t;
 const Voltage_t errorStateThreshold = 1.0f;       // Error state if error is bigger than this
 const Voltage_t adjustingStateThreshold = 0.5f;  // Adjustment state if error is between this and error threshold
-const Voltage_t stabilizingStateThreshold = 0.1f; // Stabilizing state if error is between this and adjustment threshold
+const Voltage_t stabilizingStateThreshold = 0.2f; // Stabilizing state if error is between this and adjustment threshold
 // In steady state if error is less than all thresholds
 
 // TODO: Analog/Input Pin definitions
@@ -54,7 +54,7 @@ Pin_t PIN_PWM = 9;                                          // Arduino pin for p
 
 // Duty cycle info
 DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
-const DutyCycle_t MAX_DC = 60.0f;    // Acts as a software-based kill switch
+const DutyCycle_t MAX_DC = 63.0f;    // Acts as a software-based kill switch
 
 // Circuit components (reference schematic)
 Resistance_t R5 = 3900; // ADC voltage divider
@@ -91,7 +91,7 @@ void loop() {
 
   regulateBoostVoltage();
   
-  delay(500); // Delay for next analog read
+  delay(50); // Delay for next analog read
 }
 
 void regulateBoostVoltage() {
@@ -104,41 +104,40 @@ void regulateBoostVoltage() {
   // Get Boost Converter output and calculate error 
   Voltage_t boostOutput = measureBoostVoltage();
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
-
+  regulator_t prev = regulationState;
   regulationState = determineRegulationState(error);
-  
   switch (regulationState) {
     case IDLE:
-      Serial.println("Current State: IDLE");
+      if (prev != regulationState) Serial.println("Current State: IDLE");
       nextDutyCycle = 0;
       break;
     case ERROR_NEGATIVE:
-      Serial.println("Current State: ERROR_NEGATIVE");
+      if (prev != regulationState) Serial.println("Current State: ERROR_NEGATIVE");
       nextDutyCycle = currentDutyCycle + errorStateThreshold;
       break;
     case ERROR_POSITIVE:
-      Serial.println("Current State: ERROR_POSITIVE");
+      if (prev != regulationState) Serial.println("Current State: ERROR_POSITIVE");
       nextDutyCycle = currentDutyCycle - errorStateThreshold;
       break;
     case ADJUSTING_NEGATIVE:
-      Serial.println("Current State: ADJUSTING_NEGATIVE");
+      if (prev != regulationState) Serial.println("Current State: ADJUSTING_NEGATIVE");
       nextDutyCycle = currentDutyCycle + adjustingStateThreshold;
       break;
     case ADJUSTING_POSITIVE:
-      Serial.println("Current State: ADJUSTING_POSITIVE");
+      if (prev != regulationState) Serial.println("Current State: ADJUSTING_POSITIVE");
       nextDutyCycle = currentDutyCycle - adjustingStateThreshold;
       break;
     case STABILIZING_NEGATIVE:
-      Serial.println("Current State: STABILIZING_NEGATIVE");
+      if (prev != regulationState) Serial.println("Current State: STABILIZING_NEGATIVE");
       nextDutyCycle = currentDutyCycle + stabilizingStateThreshold;
       break;
     case STABILIZING_POSITIVE:
-      Serial.println("Current State: STABILIZING_POSITIVE");
+      if (prev != regulationState) Serial.println("Current State: STABILIZING_POSITIVE");
       nextDutyCycle = currentDutyCycle - stabilizingStateThreshold;
       break;
     case STEADY:
     default:
-      Serial.println("Current state: STEADY");
+      if (prev != regulationState) Serial.println("Current state: STEADY");
       break;
   }
 
@@ -148,7 +147,7 @@ void regulateBoostVoltage() {
   // Set and apply
   setPWM_DutyCycle(nextDutyCycle);
   
-  Serial.println(nextDutyCycle);
+  // Serial.println(nextDutyCycle);
   currentDutyCycle = nextDutyCycle;
 }
 
@@ -165,10 +164,9 @@ regulator_t determineRegulationState(Voltage_t error) {
   return STEADY;
 }
 
+/// Determines whether the source is connected or not
 bool sourceConnected() {
-  int x = digitalRead(PIN_SOURCE);
-  return x;
-
+  return digitalRead(PIN_SOURCE);
 }
 
 void configureTimer() {
@@ -206,18 +204,10 @@ Voltage_t measureBoostVoltage() {
   return boostOutputVoltage;
 }
 
-// DEPRECATED
-Voltage_t calculateBatteryVoltage() {
-  
-  return 0;
-  // Calculate current through
-  //return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
-}
 
 /// Sets the duty cycle of the timer 
 void setPWM_DutyCycle(DutyCycle_t dc) {
   unsigned long o = (dc * DECIMAL_PRECISION * TCNT1_TOP) / 1000.0f; // Sets to pin 9
-  Serial.println(o);
   OCR1A = o;
 }
 
