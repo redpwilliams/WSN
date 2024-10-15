@@ -23,20 +23,21 @@
 typedef const byte Pin_t;       // Arduino in/out pins
 typedef const float Voltage_t;  // Constant & variable/measured voltage sources
 typedef const int Resistance_t; // Resistors
-typedef byte DutyCycle_t;       // As whole ints (30% duty cycle: DutyCycle_t dc = 30;)
+typedef float DutyCycle_t;      // As decimals 0 - 100. Ex: 69.1% duty cycle: DutyCycle_t dc = 69.1f;
 
 // TODO: Analog/Input Pin definitions
 // Pin_t PIN_Thermistor = AX;
 Pin_t PIN_BOOST_REF = A0;   // Connects to R6 node in voltage divider/ADC sub circuit
 
 // Timer parameters
-const unsigned long PWM_FREQ_HZ = 50e3;               // Switching frequency
-const unsigned long TCNT1_TOP = 16e6/(2*PWM_FREQ_HZ); // Sets up timer
-Pin_t PIN_PWM = 9;                                    // Arduino pin for pwm signal
+const unsigned long PWM_FREQ_HZ = 50e3;                     // Switching frequency
+const byte DECIMAL_PRECISION = 100;                         // Either 1, 10 or 100, Ex: 10 = ##.#%, 1000 = ##.##% 
+const unsigned long TCNT1_TOP = 16e6/(2*PWM_FREQ_HZ) * 10; // Number of 
+Pin_t PIN_PWM = 9;                                          // Arduino pin for pwm signal
 
 // Duty cycle info
-DutyCycle_t currentDutyCycle = 0; // Start at 0%
-const DutyCycle_t MAX_DC = 60;    // Acts as a software-based kill switch
+DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
+const DutyCycle_t MAX_DC = 60.0f;    // Acts as a software-based kill switch
 
 // Circuit components (reference schematic)
 Resistance_t R5 = 3900; // ADC voltage divider
@@ -57,7 +58,7 @@ void setup() {
 
   // Enable the timer to drive the 50 kHz signal
   configureTimer();
-
+Serial.begin(9600)
   // Applies the starting duty cycle to the PWM signal
   setPWM_DutyCycle(currentDutyCycle);
 }
@@ -98,8 +99,8 @@ void configureTimer() {
   TCCR1B = 0;
   TCNT1  = 0;
   
-  TCCR1A |= (1 << COM1A1) | (1 << WGM11);
-  TCCR1B |= (1 << WGM13) | (1 << CS10);
+  TCCR1A |= (1 << COM1A1) | (1 << WGM11); // Non-inverting PWM
+  TCCR1B |= (1 << WGM13) | (1 << CS10);   // Fast PWM, TOP=ICR1
   ICR1 = TCNT1_TOP;
 }
 
@@ -133,8 +134,10 @@ Voltage_t calculateBatteryVoltage() {
   //return voltageRead * (R5 + R6) / R6; // TODO: Account for D3 diode drop
 }
 
+/// Sets the duty cycle of the timer 
 void setPWM_DutyCycle(DutyCycle_t dc) {
-  OCR1A = (unsigned long) (dc * TCNT1_TOP) / 100; // Sets to pin 9
+  unsigned long o = (dc * TCNT1_TOP) / (100 * DECIMAL_PRECISION); // Sets to pin 9
+  OCR1A = o;
 }
 
 template <typename T>
