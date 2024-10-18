@@ -19,11 +19,10 @@
         reading from it, saving power.
 */
 
-// Custom types for readability
-typedef const byte Pin_t;       // Arduino in/out pins
-typedef const float Voltage_t;  // Constant & variable/measured voltage sources
-typedef const int Resistance_t; // Resistors
-typedef float DutyCycle_t;      // As decimals 0 - 100. Ex: 69.1% duty cycle: DutyCycle_t dc = 69.1f;
+#include "Regulator.hpp"
+#include "PWM.hpp"
+#include "types.hpp"
+
 
 // FSM States and parameters
 typedef enum { 
@@ -82,16 +81,17 @@ void setup() {
   configureTimer();
 
   // Applies the starting duty cycle to the PWM signal
-  setPWM_DutyCycle(currentDutyCycle);
+  setDutyCycle(&OCR1A, currentDutyCycle);
 }
 
 void loop() {
  
   // TODO #1
 
-  regulateBoostVoltage();
-  
-  delay(50); // Delay for next analog read
+  //regulateBoostVoltage();
+  increaseDutyCycle(&OCR1A);
+  Serial.println(OCR1A);
+  delay(1000); // Delay for next analog read
 }
 
 void regulateBoostVoltage() {
