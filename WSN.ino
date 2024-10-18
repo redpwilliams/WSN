@@ -38,7 +38,7 @@ typedef enum {
 } regulator_t;
 const Voltage_t errorStateThreshold = 1.0f;       // Error state if error is bigger than this
 const Voltage_t adjustingStateThreshold = 0.5f;  // Adjustment state if error is between this and error threshold
-const Voltage_t stabilizingStateThreshold = 0.2f; // Stabilizing state if error is between this and adjustment threshold
+const Voltage_t stabilizingStateThreshold = 0.25f; // Stabilizing state if error is between this and adjustment threshold
 // In steady state if error is less than all thresholds
 
 // TODO: Analog/Input Pin definitions
@@ -54,7 +54,7 @@ Pin_t PIN_PWM = 9;                                          // Arduino pin for p
 
 // Duty cycle info
 DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
-const DutyCycle_t MAX_DC = 63.0f;    // Acts as a software-based kill switch
+const DutyCycle_t MAX_DC = 100.0f;    // Acts as a software-based kill switch
 
 // Circuit components (reference schematic)
 Resistance_t R5 = 3900; // ADC voltage divider
@@ -66,7 +66,7 @@ const Voltage_t D3 = 0.580f; // Measure with multimeter
 // Circuit parameters
 const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
 const Voltage_t BOOST_STD_INPUT = 5.0f;   // What the input of the boost converter should be
-const Voltage_t BOOST_STD_OUTPUT = 10.4f; // What the output of the boost converter should be
+const Voltage_t BOOST_STD_OUTPUT = 10.0f; // What the output of the boost converter should be
 
 /// Runs once at 
 void setup() {
@@ -101,8 +101,10 @@ void regulateBoostVoltage() {
   // Prepare to set new duty cycle
   DutyCycle_t nextDutyCycle;
   
+  const Voltage_t bias = 0.1f;
+
   // Get Boost Converter output and calculate error 
-  Voltage_t boostOutput = measureBoostVoltage();
+  Voltage_t boostOutput = measureBoostVoltage() + bias;
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
   regulator_t prev = regulationState;
   regulationState = determineRegulationState(error);
@@ -143,7 +145,7 @@ void regulateBoostVoltage() {
 
   // Ensure the newly calculated duty cycle is below the max
   nextDutyCycle = minimum(nextDutyCycle, MAX_DC);
-
+  Serial.println(nextDutyCycle);
   // Set and apply
   setPWM_DutyCycle(nextDutyCycle);
   
