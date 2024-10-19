@@ -1,5 +1,6 @@
 #include "Debug.hpp"
 
+DebugLevel Debug::debugLevel = DebugLevel::INFO;
 
 static void Debug::setDebugLevel(DebugLevel level) {
   debugLevel = level;

@@ -21,11 +21,9 @@
 
 #include "Regulator.hpp"
 #include "PWM.hpp"
+#include "Debug.hpp"
 #include "types.hpp"
 
-// In steady state if error is less than all thresholds
-
-// TODO: Analog/Input Pin definitions
 // Pin_t PIN_Thermistor = AX;
 struct Pins {
   Pin_t BOOST_REF = A0; // Connects to R6 node in voltage divider/ADC sub circuit
@@ -33,12 +31,9 @@ struct Pins {
   Pin_t PWM = 9;    // Arduino pin for pwm signal
 } Pins;
 
-
 // Timer parameters
-const unsigned long PWM_FREQ_HZ = 50e3;                     // Switching frequency
-const byte DECIMAL_PRECISION = 10;                         // Either 1, 10 or 100, Ex: 10 = ##.#%, 1000 = ##.##% 
-const unsigned long TCNT1_TOP = 16e6/(2*PWM_FREQ_HZ);  // Period/number of clock cycles of the timer
-
+const unsigned long PWM_FREQ_HZ = 50e3;                   // Switching frequency
+const unsigned long TCNT1_TOP = 16e6 / (2 * PWM_FREQ_HZ); // Period/number of clock cycles of the timer
 
 // Duty cycle info
 DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
@@ -55,57 +50,43 @@ const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
 const Voltage_t BOOST_STD_INPUT = 5.0f;   // What the input of the boost converter should be
 const Voltage_t BOOST_STD_OUTPUT = 10.4f; // What the output of the boost converter should be
 
-/// Runs once at 
 void setup() {
-  // Configure the voltage divider as an input
-  pinMode(Pins.BOOST_REF, INPUT);
-
-  // Configure input source checker
-  pinMode(Pins.SOURCE, INPUT);
-
-  Serial.begin(9600);
-
-  // Enable the timer to drive the 50 kHz signal
+  // Pin & timer setup
+  configurePins();
   configureTimer();
+  
+  // Logging
+  Serial.begin(9600);
+  Debug::setDebugLevel(DebugLevel::WARN);
 
   // Applies the starting duty cycle to the PWM signal
   setDutyCycle(&OCR1A, currentDutyCycle);
 }
 
 void loop() {
- 
-  // TODO #1
-
   regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
-
   delay(100); // Delay for next analog read
 }
 
-
-
 void configureTimer() {
-  pinMode(Pins.PWM, OUTPUT);
-
   // Clear Timer1 control and count registers
   TCCR1A = 0;
   TCCR1B = 0;
   TCNT1  = 0;
   
   TCCR1A |= (1 << COM1A1) | (1 << WGM11); // Non-inverting PWM
-  TCCR1B |= (1 << WGM13) | (1 << CS10);   // Fast PWM, TOP=ICR1
+  TCCR1B |= (1 << WGM13) | (1 << CS10);   // Fast PWM, TOP=ICR1, No prescaler
   ICR1 = TCNT1_TOP;
 }
 
-/// Reads 
-void configureDutyCycle() {
-  // Bias to further vary output voltage
-  // More positive bias = higher duty cycle = higher output voltage
-  Voltage_t bias = -100e-3; // 100mV bias
-  currentDutyCycle = 1 - (BOOST_STD_INPUT / (BOOST_STD_OUTPUT + D1 + bias));// REVIEW - Only considers Schottky diode drop
-  currentDutyCycle *= 100; // Convert from decimal to percentage
+void configurePins() {
+  pinMode(Pins.PWM, OUTPUT);
+  pinMode(Pins.BOOST_REF, INPUT);
+  pinMode(Pins.SOURCE, INPUT);
 }
 
-/// Determines whether the source is connected or not
+/// Determines whether the source is connected or not.
+/// `digitalRead` returns either HIGH (logic 1/true) or LOW (logic 0/false).
 bool sourceConnected() {
   return digitalRead(Pins.SOURCE);
 }
@@ -113,19 +94,8 @@ bool sourceConnected() {
 /// Returns the output to the Boost Converter
 /// Refer to the "Boost Converter Output Voltage" equation/derivation in the README
 Voltage_t measureBoostVoltage() {
-
-  // Read the reference voltage. Resistors chosen such that this input is always less than 5V
+  // Reads the reference voltage, then calculates output voltage
   Voltage_t Ref = analogRead(Pins.BOOST_REF) * 5 / 1023.0f;
-
-  // Use equation to get output voltage
   Voltage_t boostOutputVoltage = (Ref * (R5 + R6)) / R6 + D3;
-  
   return boostOutputVoltage;
-}
-
-
-/// Sets the duty cycle of the timer 
-void setPWM_DutyCycle(DutyCycle_t dc) {
-  unsigned long o = (dc * DECIMAL_PRECISION * TCNT1_TOP) / 1000.0f; // Sets to pin 9
-  OCR1A = o;
 }

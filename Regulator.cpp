@@ -1,6 +1,7 @@
 #include "Regulator.hpp"
 #include "Arduino.h"
 #include "PWM.hpp"
+#include "Debug.hpp"
 
 // Thresholds that define the bounds of each regulation stage
 struct Thresholds {
@@ -29,7 +30,7 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
 
   switch (state) {
     case IDLE:
-      Serial.println("Current State: IDLE");
+      Debug::Log(DebugLevel::INFO, "Current State: IDLE");
       nextDutyCycle = 0;
       break;
     case ERROR_NEGATIVE:
