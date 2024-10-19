@@ -1,3 +1,5 @@
+#include "HardwareSerial.h"
+#include "WString.h"
 #include "Regulator.hpp"
 #include "Arduino.h"
 #include "PWM.hpp"
@@ -34,33 +36,32 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
       nextDutyCycle = 0;
       break;
     case ERROR_NEGATIVE:
-      Serial.println("Current State: ERROR_NEGATIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: ERROR_NEGATIVE");
       nextDutyCycle = *currDC_ptr + Thresholds.ERROR;
-
       break;
     case ERROR_POSITIVE:
-      Serial.println("Current State: ERROR_POSITIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: ERROR_POSITIVE");
       nextDutyCycle = *currDC_ptr - Thresholds.ERROR;
       break;
     case ADJUSTING_NEGATIVE:
-      Serial.println("Current State: ADJUSTING_NEGATIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_NEGATIVE");
       nextDutyCycle = *currDC_ptr + Thresholds.ADJUST;
       break;
     case ADJUSTING_POSITIVE:
-      Serial.println("Current State: ADJUSTING_POSITIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_POSITIVE");
       nextDutyCycle = *currDC_ptr - Thresholds.ADJUST;
       break;
     case STABILIZING_NEGATIVE:
-      Serial.println("Current State: STABILIZING_NEGATIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_NEGATIVE");
       nextDutyCycle = *currDC_ptr + Thresholds.STABILIZE;
       break;
     case STABILIZING_POSITIVE:
-      Serial.println("Current State: STABILIZING_POSITIVE");
+      Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_POSITIVE");
       nextDutyCycle = *currDC_ptr - Thresholds.STABILIZE;
       break;
     case STEADY:
     default:
-      Serial.println("Current state: STEADY");
+      Debug::Log(DebugLevel::INFO, "Current state: STEADY");
       break;
   }
 
@@ -69,7 +70,6 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
 
   // Set and apply
   setDutyCycle(OCR1A_reg, nextDutyCycle);
-
   (*currDC_ptr) = nextDutyCycle;
 }
 

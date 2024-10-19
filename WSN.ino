@@ -1,14 +1,10 @@
-// Reference: https://github.com/T-622/25KHz-Arduino-Fan-PWM-Control/blob/main/25KHz_PWM_UNO.ino
+// Wireless Sensor Node
+// ECE 2804 - Inegrated Design Project
+// Red Williams, Ahmed Yousif
 
 /* 
   TODOs:
-    1. Reset duty cycle to 0 if there is no input voltage to the ADC,
-        Meaning, the boost converter is not operating. Don't want to see
-        huge voltage spikes when reconnecting the load and the duty cycle is already high
-    2. Create custom debug logger object. Should be able to, anywhere in the code, set a debug
-       level (info, warn, error, etc) and log it to the serial monitor
-    3. Create FSM for monitoring output voltage. States are OverVoltage, UnderVoltage, Steady
-       
+    1. All clear!     
 */
 
 /*
@@ -19,16 +15,16 @@
         reading from it, saving power.
 */
 
-#include "Regulator.hpp"
-#include "PWM.hpp"
-#include "Debug.hpp"
-#include "types.hpp"
+#include "Regulator.hpp"  // Boost output regulation
+#include "PWM.hpp"        // Changes to duty cycle
+#include "Debug.hpp"      // Clever system logging
+#include "types.hpp"      // Types for readability
 
-// Pin_t PIN_Thermistor = AX;
 struct Pins {
   Pin_t BOOST_REF = A0; // Connects to R6 node in voltage divider/ADC sub circuit
   Pin_t SOURCE = 2;
   Pin_t PWM = 9;    // Arduino pin for pwm signal
+  // Pin_t PIN_Thermistor = AX;
 } Pins;
 
 // Timer parameters
@@ -48,8 +44,12 @@ const Voltage_t D3 = 0.580f; // Measure with multimeter
 // Circuit parameters
 const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
 const Voltage_t BOOST_STD_INPUT = 5.0f;   // What the input of the boost converter should be
-const Voltage_t BOOST_STD_OUTPUT = 10.4f; // What the output of the boost converter should be
+const Voltage_t BOOST_STD_OUTPUT = 10.0f; // What the output of the boost converter should be
 
+// Main Arduino functions --------------------------------------------------------------------
+
+/// Sets up the pins, timer, debug instructions.
+/// Sets the initial duty cycle to 0.
 void setup() {
   // Pin & timer setup
   configurePins();
@@ -63,11 +63,26 @@ void setup() {
   setDutyCycle(&OCR1A, currentDutyCycle);
 }
 
+/// As of this commit, this program continuously monitors the output
+/// of the boost converter 10x each second and keeps it at a stable output.
 void loop() {
   regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
   delay(100); // Delay for next analog read
 }
 
+// Helper functions --------------------------------------------------------------------------
+
+/// Sets each pin defined in the Pins struct
+/// as an input or an output.
+void configurePins() {
+  pinMode(Pins.BOOST_REF, INPUT);
+  pinMode(Pins.SOURCE,    INPUT);
+  pinMode(Pins.PWM,       OUTPUT);
+}
+
+/// Configures the 16-bit timer on the ATmega328p using predefined macros.
+/// No prescaler is used, and ICR1 is set so that it generates a 50 kHz square wave.
+/// The ratio of register OCR1A to ICR1 is the duty cycle the timer operates at.
 void configureTimer() {
   // Clear Timer1 control and count registers
   TCCR1A = 0;
@@ -77,12 +92,6 @@ void configureTimer() {
   TCCR1A |= (1 << COM1A1) | (1 << WGM11); // Non-inverting PWM
   TCCR1B |= (1 << WGM13) | (1 << CS10);   // Fast PWM, TOP=ICR1, No prescaler
   ICR1 = TCNT1_TOP;
-}
-
-void configurePins() {
-  pinMode(Pins.PWM, OUTPUT);
-  pinMode(Pins.BOOST_REF, INPUT);
-  pinMode(Pins.SOURCE, INPUT);
 }
 
 /// Determines whether the source is connected or not.
