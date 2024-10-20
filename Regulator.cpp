@@ -8,7 +8,7 @@
 // Thresholds that define the bounds of each regulation stage
 struct Thresholds {
   const Voltage_t ERROR     = 1.0f;   // Error state if error is bigger than this
-  const Voltage_t ADJUST    = 0.5f;   // Adjustment state if error is between this and error threshold
+  const Voltage_t ADJUST    = 0.4f;   // Adjustment state if error is between this and error threshold
   const Voltage_t STABILIZE = 0.25f;  // Stabilizing state if error is between this and adjustment threshold
 } Thresholds;
 
@@ -26,38 +26,46 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   // Get Boost Converter output and calculate error 
   Voltage_t boostOutput = measureBoostVoltage();
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
-
+ Serial.println(error);
   // Determine which state to be in 
   state = determineRegulationState(error);
+   Serial.println(state);
 
   switch (state) {
     case IDLE:
       Debug::Log(DebugLevel::INFO, "Current State: IDLE");
       nextDutyCycle = 0;
+      // setDutyCycle(*OCR1A_reg, 0);
       break;
     case ERROR_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ERROR_NEGATIVE");
-      nextDutyCycle = *currDC_ptr + Thresholds.ERROR;
+      //nextDutyCycle = *currDC_ptr + 3;
+      increaseDutyCycleBy(3, OCR1A_reg);
       break;
     case ERROR_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ERROR_POSITIVE");
-      nextDutyCycle = *currDC_ptr - Thresholds.ERROR;
+      //nextDutyCycle = *currDC_ptr - 3;
+      decreaseDutyCycleBy(3, OCR1A_reg);
       break;
     case ADJUSTING_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_NEGATIVE");
-      nextDutyCycle = *currDC_ptr + Thresholds.ADJUST;
+      //nextDutyCycle = *currDC_ptr + 2;
+      increaseDutyCycleBy(2, OCR1A_reg);
       break;
     case ADJUSTING_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_POSITIVE");
-      nextDutyCycle = *currDC_ptr - Thresholds.ADJUST;
+      //nextDutyCycle = *currDC_ptr - 2;
+      decreaseDutyCycleBy(2, OCR1A_reg);
       break;
     case STABILIZING_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_NEGATIVE");
-      nextDutyCycle = *currDC_ptr + Thresholds.STABILIZE;
+      //nextDutyCycle = *currDC_ptr + 1;
+      increaseDutyCycleBy(1, OCR1A_reg);
       break;
     case STABILIZING_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_POSITIVE");
-      nextDutyCycle = *currDC_ptr - Thresholds.STABILIZE;
+      //nextDutyCycle = *currDC_ptr - 1;
+      decreaseDutyCycleBy(1, OCR1A_reg);
       break;
     case STEADY:
     default:
@@ -67,9 +75,8 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
 
   // Ensure the newly calculated duty cycle is below the max
   nextDutyCycle = min(nextDutyCycle, MAX_DC);
-
   // Set and apply
-  setDutyCycle(OCR1A_reg, nextDutyCycle);
+  //setDutyCycle(OCR1A_reg, nextDutyCycle);
   (*currDC_ptr) = nextDutyCycle;
 }
 

@@ -22,7 +22,7 @@ typedef enum {
 // } Thresholds;
 
 
-const DutyCycle_t MAX_DC = 100.0f;    // Acts as a software-based kill switch
+const DutyCycle_t MAX_DC = 160.0f;    // Acts as a software-based kill switch
 
 void regulateBoostVoltage(DutyCycle_t* currentDutyCycle, const Voltage_t OUT, int* OCR1A_reg);
 RegulationState_t determineRegulationState(Voltage_t error);
