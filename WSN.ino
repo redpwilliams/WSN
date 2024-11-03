@@ -35,8 +35,8 @@ const unsigned long TCNT1_TOP = 16e6 / (2 * PWM_FREQ_HZ); // Period/number of cl
 DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
 
 // Circuit components (reference schematic)
-Resistance_t R5 = 3900; // ADC voltage divider
-Resistance_t R6 = 1950; // ADC voltage divider
+Resistance_t R5 = 19.5e3; // ADC voltage divider
+Resistance_t R6 = 10e3;   // ADC voltage divider
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
 const Voltage_t D3 = 0.580f; // Measure with multimeter
@@ -44,7 +44,7 @@ const Voltage_t D3 = 0.580f; // Measure with multimeter
 // Circuit parameters
 const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
 const Voltage_t BOOST_STD_INPUT = 5.0f;   // What the input of the boost converter should be
-const Voltage_t BOOST_STD_OUTPUT = 10.0f; // What the output of the boost converter should be
+const Voltage_t BOOST_STD_OUTPUT = 10.2f; // What the output of the boost converter should be
 
 // Main Arduino functions --------------------------------------------------------------------
 
@@ -68,6 +68,7 @@ void setup() {
 void loop() {
   regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
   delay(100); // Delay for next analog read
+  Serial.println(OCR1A);
 }
 
 // Helper functions --------------------------------------------------------------------------
