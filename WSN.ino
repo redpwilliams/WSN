@@ -39,7 +39,7 @@ Resistance_t R5 = 19.5e3; // ADC voltage divider
 Resistance_t R6 = 10e3;   // ADC voltage divider
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
-const Voltage_t D3 = 0.580f; // Measure with multimeter
+const Voltage_t D3 = 0.591f; // Measure with multimeter
 
 // Circuit parameters
 const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
@@ -68,7 +68,6 @@ void setup() {
 void loop() {
   regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
   delay(100); // Delay for next analog read
-  Serial.println(OCR1A);
 }
 
 // Helper functions --------------------------------------------------------------------------

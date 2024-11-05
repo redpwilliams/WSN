@@ -28,8 +28,8 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
   Serial.println(boostOutput);
   // Determine which state to be in 
-  state = determineRegulationState(error);
   //  Serial.println((RegulationState_t)state);
+  Debug::setDebugLevel(DebugLevel::INFO);
 
   switch (state) {
     case IDLE:
