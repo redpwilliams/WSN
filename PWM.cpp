@@ -23,6 +23,5 @@ void decreaseDutyCycleBy(int delta, int *OCR1A_reg) {
 /// ATTEMPS to set the duty cycle to a specific value.
 /// Rounds down to the closest value.
 void setDutyCycle(DutyCycle_t dutyCycle, int* OCR1A_reg) {
-  //(*OCR1A_reg) = dutyCycle * 160 / 100.0f;
-  (*OCR1A_reg) = dutyCycle;
+  (*OCR1A_reg) = dutyCycle * 160.0f;
 } 

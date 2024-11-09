@@ -7,8 +7,8 @@
 
 // Thresholds that define the bounds of each regulation stage
 struct Thresholds {
-  const Voltage_t ERROR     = 1.0f;   // Error state if error is bigger than this
-  const Voltage_t ADJUST    = 0.5f;   // Adjustment state if error is between this and error threshold
+  const Voltage_t ERROR = 1.0f;       // Error state if error is bigger than this
+  const Voltage_t ADJUST = 0.5f;      // Adjustment state if error is between this and error threshold
   const Voltage_t STABILIZE = 0.25f;  // Stabilizing state if error is between this and adjustment threshold
 } Thresholds;
 
@@ -23,19 +23,22 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   // Prepare to set new duty cycle
   DutyCycle_t nextDutyCycle;
 
-  // Get Boost Converter output and calculate error 
+  // Get Boost Converter output and calculate error
   Voltage_t boostOutput = measureBoostVoltage();
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
   //Serial.println(boostOutput);
-  // Determine which state to be in 
+  // Determine which state to be in
   state = determineRegulationState(error);
   //Serial.println((RegulationState_t)state);
-  Debug::setDebugLevel(DebugLevel::NONE);
+  Debug::setDebugLevel(DebugLevel::INFO);
+
+
 
   switch (state) {
     case IDLE:
       Debug::Log(DebugLevel::INFO, "Current State: IDLE");
-      setDutyCycle(0.0, OCR1A_reg);
+      setDutyCycle(0.5, OCR1A_reg);
+      Serial.println(*OCR1A_reg);
       break;
     case ERROR_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ERROR_NEGATIVE");
@@ -78,14 +81,13 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
 /// this returns the current state of the Boost Converter
 RegulationState_t determineRegulationState(Voltage_t error) {
   if (!sourceConnected()) return IDLE;
-  if (error <= -Thresholds.ERROR    ) return ERROR_NEGATIVE;
-  if (error >=  Thresholds.ERROR    ) return ERROR_POSITIVE;
-  if (error <= -Thresholds.ADJUST   ) return ADJUSTING_NEGATIVE;
-  if (error >=  Thresholds.ADJUST   ) return ADJUSTING_POSITIVE;
+  if (error <= -Thresholds.ERROR) return ERROR_NEGATIVE;
+  if (error >= Thresholds.ERROR) return ERROR_POSITIVE;
+  if (error <= -Thresholds.ADJUST) return ADJUSTING_NEGATIVE;
+  if (error >= Thresholds.ADJUST) return ADJUSTING_POSITIVE;
   if (error <= -Thresholds.STABILIZE) return STABILIZING_NEGATIVE;
-  if (error >=  Thresholds.STABILIZE) return STABILIZING_POSITIVE;
-  
+  if (error >= Thresholds.STABILIZE) return STABILIZING_POSITIVE;
+
   // Steady state detected
   return STEADY;
 }
-

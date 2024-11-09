@@ -57,8 +57,7 @@ void setup() {
   
   // Logging
   Serial.begin(9600);
-  Debug::setDebugLevel(DebugLevel::WARN);
-
+  
   // Applies the starting duty cycle to the PWM signal
   setDutyCycle(currentDutyCycle, &OCR1A);
 }
