@@ -21,7 +21,7 @@
 #include "types.hpp"      // Types for readability
 
 struct Pins {
-  Pin_t BOOST_REF = A0; // Connects to R6 node in voltage divider/ADC sub circuit
+  Pin_t BOOST_REF = A1; // Connects to R6 node in voltage divider/ADC sub circuit
   Pin_t SOURCE = 2;
   Pin_t PWM = 9;    // Arduino pin for pwm signal
   // Pin_t PIN_Thermistor = AX;
@@ -60,7 +60,7 @@ void setup() {
   Debug::setDebugLevel(DebugLevel::WARN);
 
   // Applies the starting duty cycle to the PWM signal
-  setDutyCycle(&OCR1A, currentDutyCycle);
+  setDutyCycle(currentDutyCycle, &OCR1A);
 }
 
 /// As of this commit, this program continuously monitors the output
@@ -97,7 +97,9 @@ void configureTimer() {
 /// Determines whether the source is connected or not.
 /// `digitalRead` returns either HIGH (logic 1/true) or LOW (logic 0/false).
 bool sourceConnected() {
-  return digitalRead(Pins.SOURCE);
+  int i = digitalRead(Pins.SOURCE);
+  Serial.println(digitalRead(Pins.SOURCE));
+  return i;
 }
 
 /// Returns the output to the Boost Converter
@@ -106,5 +108,6 @@ Voltage_t measureBoostVoltage() {
   // Reads the reference voltage, then calculates output voltage
   Voltage_t Ref = analogRead(Pins.BOOST_REF) * 5 / 1023.0f;
   Voltage_t boostOutputVoltage = (Ref * (R5 + R6)) / R6 + D3;
+    //.Serial.println(boostOutputVoltage);
   return boostOutputVoltage;
 }

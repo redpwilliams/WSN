@@ -26,45 +26,39 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   // Get Boost Converter output and calculate error 
   Voltage_t boostOutput = measureBoostVoltage();
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
-  Serial.println(boostOutput);
+  //Serial.println(boostOutput);
   // Determine which state to be in 
-  //  Serial.println((RegulationState_t)state);
-  Debug::setDebugLevel(DebugLevel::INFO);
+  state = determineRegulationState(error);
+  //Serial.println((RegulationState_t)state);
+  Debug::setDebugLevel(DebugLevel::NONE);
 
   switch (state) {
     case IDLE:
       Debug::Log(DebugLevel::INFO, "Current State: IDLE");
-      nextDutyCycle = 0;
-      // setDutyCycle(*OCR1A_reg, 0);
+      setDutyCycle(0.0, OCR1A_reg);
       break;
     case ERROR_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ERROR_NEGATIVE");
-      //nextDutyCycle = *currDC_ptr + 3;
       increaseDutyCycleBy(3, OCR1A_reg);
       break;
     case ERROR_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ERROR_POSITIVE");
-      //nextDutyCycle = *currDC_ptr - 3;
       decreaseDutyCycleBy(3, OCR1A_reg);
       break;
     case ADJUSTING_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_NEGATIVE");
-      //nextDutyCycle = *currDC_ptr + 2;
       increaseDutyCycleBy(2, OCR1A_reg);
       break;
     case ADJUSTING_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: ADJUSTING_POSITIVE");
-      //nextDutyCycle = *currDC_ptr - 2;
       decreaseDutyCycleBy(2, OCR1A_reg);
       break;
     case STABILIZING_NEGATIVE:
       Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_NEGATIVE");
-      //nextDutyCycle = *currDC_ptr + 1;
       increaseDutyCycleBy(1, OCR1A_reg);
       break;
     case STABILIZING_POSITIVE:
       Debug::Log(DebugLevel::INFO, "Current State: STABILIZING_POSITIVE");
-      //nextDutyCycle = *currDC_ptr - 1;
       decreaseDutyCycleBy(1, OCR1A_reg);
       break;
     case STEADY:
