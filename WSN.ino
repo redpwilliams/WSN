@@ -35,16 +35,16 @@ const unsigned long TCNT1_TOP = 16e6 / (2 * PWM_FREQ_HZ); // Period/number of cl
 DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
 
 // Circuit components (reference schematic)
-Resistance_t R5 = 19.5e3; // ADC voltage divider
+Resistance_t R5 = 19.16e3; // ADC voltage divider
 Resistance_t R6 = 10e3;   // ADC voltage divider
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
-const Voltage_t D3 = 0.591f; // Measure with multimeter
+const Voltage_t D3 = 0.595f; // Measure with multimeter
 
 // Circuit parameters
 const Voltage_t NOMINAL_BATTERY = 9.0f;   // What the battery voltage should be
 const Voltage_t BOOST_STD_INPUT = 5.0f;   // What the input of the boost converter should be
-const Voltage_t BOOST_STD_OUTPUT = 10.2f; // What the output of the boost converter should be
+const Voltage_t BOOST_STD_OUTPUT = 10.4f; // What the output of the boost converter should be
 
 // Main Arduino functions --------------------------------------------------------------------
 
@@ -96,9 +96,7 @@ void configureTimer() {
 /// Determines whether the source is connected or not.
 /// `digitalRead` returns either HIGH (logic 1/true) or LOW (logic 0/false).
 bool sourceConnected() {
-  int i = digitalRead(Pins.SOURCE);
-  Serial.println(digitalRead(Pins.SOURCE));
-  return i;
+  return digitalRead(Pins.SOURCE);
 }
 
 /// Returns the output to the Boost Converter
@@ -107,6 +105,6 @@ Voltage_t measureBoostVoltage() {
   // Reads the reference voltage, then calculates output voltage
   Voltage_t Ref = analogRead(Pins.BOOST_REF) * 5 / 1023.0f;
   Voltage_t boostOutputVoltage = (Ref * (R5 + R6)) / R6 + D3;
-    //.Serial.println(boostOutputVoltage);
+  Serial.println(Ref);
   return boostOutputVoltage;
 }

@@ -8,8 +8,8 @@
 // Thresholds that define the bounds of each regulation stage
 struct Thresholds {
   const Voltage_t ERROR = 1.0f;       // Error state if error is bigger than this
-  const Voltage_t ADJUST = 0.5f;      // Adjustment state if error is between this and error threshold
-  const Voltage_t STABILIZE = 0.25f;  // Stabilizing state if error is between this and adjustment threshold
+  const Voltage_t ADJUST = 0.3f;      // Adjustment state if error is between this and error threshold
+  const Voltage_t STABILIZE = 0.15f;  // Stabilizing state if error is between this and adjustment threshold
 } Thresholds;
 
 
@@ -26,7 +26,7 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   // Get Boost Converter output and calculate error
   Voltage_t boostOutput = measureBoostVoltage();
   Voltage_t error = boostOutput - BOOST_STD_OUTPUT;
-  //Serial.println(boostOutput);
+  Serial.println(boostOutput);
   // Determine which state to be in
   state = determineRegulationState(error);
   //Serial.println((RegulationState_t)state);
