@@ -37,7 +37,7 @@ void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUT
   switch (state) {
     case IDLE:
       Debug::Log(DebugLevel::INFO, "Current State: IDLE");
-      setDutyCycle(0.5, OCR1A_reg);
+      setDutyCycle(0, OCR1A_reg);
       Serial.println(*OCR1A_reg);
       break;
     case ERROR_NEGATIVE:
