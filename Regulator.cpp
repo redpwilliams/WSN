@@ -13,7 +13,7 @@ struct Thresholds {
 } Thresholds;
 
 
-/// Alters the duty cycle by reading the output voltage, comparing it to BOOST_STD_OUTPUT,
+/// Alters the duty cycle by reading the output voltage, comparing it to BOOST_STD_OUTPUT,x
 /// then increasing/decreasing the OCR1A register.
 void regulateBoostVoltage(DutyCycle_t* currDC_ptr, const Voltage_t BOOST_STD_OUTPUT, int* OCR1A_reg) {
 
