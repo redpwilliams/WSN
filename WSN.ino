@@ -17,6 +17,8 @@
 
 #include "Regulator.hpp"  // Boost output regulation
 #include "PWM.hpp"        // Changes to duty cycle
+#include "Thermistor.hpp" // Thermistor readings
+#include "Bluetooth.hpp"  // Bluetooth receive/transmit
 #include "Debug.hpp"      // Clever system logging
 #include "types.hpp"      // Types for readability
 
@@ -24,8 +26,12 @@ struct Pins {
   Pin_t BOOST_REF = A1; // Connects to R6 node in voltage divider/ADC sub circuit
   Pin_t SOURCE = 2;
   Pin_t PWM = 9;    // Arduino pin for pwm signal
-  // Pin_t PIN_Thermistor = AX;
+  Pin_t THERMISTOR = A2; // Analog input for thermistor
+  Pin_t BLUETOOTH_RX = 3;
+  Pin_t BLUETOOTH_TX = 4;
 } Pins;
+
+struct Temperature_t temps;
 
 // Timer parameters
 const unsigned long PWM_FREQ_HZ = 50e3;                   // Switching frequency
@@ -37,6 +43,7 @@ DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
 // Circuit components (reference schematic)
 Resistance_t R5 = 19.16e3; // ADC voltage divider
 Resistance_t R6 = 10e3;   // ADC voltage divider
+Resistance_t R10 = 100e3; // Thermistor series resistance
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
 const Voltage_t D3 = 0.595f; // Measure with multimeter
@@ -65,7 +72,16 @@ void setup() {
 /// As of this commit, this program continuously monitors the output
 /// of the boost converter 10x each second and keeps it at a stable output.
 void loop() {
-  regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
+  // regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
+  
+  // Measure thermistor temp readings
+  measureTemperature(&temps);  // Pass in temperatures struct defined earlier in file
+  Serial.print("Fahrenheit: ");
+  Serial.println(temps.F);
+  Serial.print("Celsius:    ");
+  Serial.println(temps.C);
+  // transmitBluetooth(temps);
+
   delay(100); // Delay for next analog read
 }
 
@@ -74,9 +90,10 @@ void loop() {
 /// Sets each pin defined in the Pins struct
 /// as an input or an output.
 void configurePins() {
-  pinMode(Pins.BOOST_REF, INPUT);
-  pinMode(Pins.SOURCE,    INPUT);
-  pinMode(Pins.PWM,       OUTPUT);
+  pinMode(Pins.BOOST_REF,   INPUT);
+  pinMode(Pins.THERMISTOR,  INPUT);
+  pinMode(Pins.SOURCE,      INPUT);
+  pinMode(Pins.PWM,         OUTPUT);
 }
 
 /// Configures the 16-bit timer on the ATmega328p using predefined macros.
@@ -97,6 +114,17 @@ void configureTimer() {
 /// `digitalRead` returns either HIGH (logic 1/true) or LOW (logic 0/false).
 bool sourceConnected() {
   return digitalRead(Pins.SOURCE);
+}
+
+Temperature_t measureTemperature(Temperature_t* tempsRef) {
+  // Voltage read at ADC
+  Voltage_t ref = analogRead(Pins.THERMISTOR);
+  
+  // Thermistor internal resistance
+  Resistance_t thermistance = R10 * (1023.0 / ref - 1.0);
+
+  // Apply Steinhart-Hart equation
+  processTemperature(&temps, ref, thermistance); // temps struct is updated
 }
 
 /// Returns the output to the Boost Converter
