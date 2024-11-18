@@ -23,7 +23,7 @@
 #include "types.hpp"      // Types for readability
 
 struct Pins {
-  Pin_t BOOST_REF = A1; // Connects to R6 node in voltage divider/ADC sub circuit
+  Pin_t BOOST_REF = A0; // Connects to R6 node in voltage divider/ADC sub circuit
   Pin_t SOURCE = 2;
   Pin_t PWM = 9;    // Arduino pin for pwm signal
   Pin_t THERMISTOR = A2; // Analog input for thermistor
@@ -43,7 +43,7 @@ DutyCycle_t currentDutyCycle = 0.0f; // Start at 0%
 // Circuit components (reference schematic)
 Resistance_t R5 = 19.16e3; // ADC voltage divider
 Resistance_t R6 = 10e3;   // ADC voltage divider
-Resistance_t R10 = 100e3; // Thermistor series resistance
+Resistance_t R10 = 10e3; // Thermistor series resistance
 const Voltage_t D1 = 0.206f; // Measure with multimeter
 const Voltage_t D5 = 0.580f; // Measure with multimeter
 const Voltage_t D3 = 0.595f; // Measure with multimeter
@@ -80,9 +80,11 @@ void loop() {
   Serial.println(temps.F);
   Serial.print("Celsius:    ");
   Serial.println(temps.C);
+  Serial.print("Kelvin:     ");
+  Serial.println(temps.K);
   // transmitBluetooth(temps);
 
-  delay(100); // Delay for next analog read
+  delay(1000); // Delay for next analog read
 }
 
 // Helper functions --------------------------------------------------------------------------
@@ -118,11 +120,11 @@ bool sourceConnected() {
 
 Temperature_t measureTemperature(Temperature_t* tempsRef) {
   // Voltage read at ADC
-  Voltage_t ref = analogRead(Pins.THERMISTOR);
+  Voltage_t ref = analogRead(Pins.THERMISTOR) * 5 / 1023.0f;
   
   // Thermistor internal resistance
-  Resistance_t thermistance = R10 * (1023.0 / ref - 1.0);
-
+  Resistance_t thermistance = R10 * (5 / ref - 1);
+  
   // Apply Steinhart-Hart equation
   processTemperature(&temps, ref, thermistance); // temps struct is updated
 }
