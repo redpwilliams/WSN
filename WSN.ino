@@ -61,7 +61,8 @@ void setup() {
   // Pin & timer setup
   configurePins();
   configureTimer();
-  
+  configureBluetooth();
+
   // Logging
   Serial.begin(9600);
   
@@ -75,15 +76,16 @@ void loop() {
   // regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
   
   // Measure thermistor temp readings
-  measureTemperature(&temps);  // Pass in temperatures struct defined earlier in file
-  Serial.print("Fahrenheit: ");
-  Serial.println(temps.F);
-  Serial.print("Celsius:    ");
-  Serial.println(temps.C);
-  Serial.print("Kelvin:     ");
-  Serial.println(temps.K);
-  Serial.println();
-  // transmitBluetooth(temps);
+  // measureTemperature(&temps);  // Pass in temperatures struct defined earlier in file
+  // Serial.print("Fahrenheit: ");
+  // Serial.println(temps.F);
+  // Serial.print("Celsius:    ");
+  // Serial.println(temps.C);
+  // Serial.print("Kelvin:     ");
+  // Serial.println(temps.K);
+  // Serial.println();
+  transmitBluetooth();
+  sendMessage();
 
   delay(1000); // Delay for next analog read
 }
