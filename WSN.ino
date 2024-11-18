@@ -82,6 +82,7 @@ void loop() {
   Serial.println(temps.C);
   Serial.print("Kelvin:     ");
   Serial.println(temps.K);
+  Serial.println();
   // transmitBluetooth(temps);
 
   delay(1000); // Delay for next analog read
