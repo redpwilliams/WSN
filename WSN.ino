@@ -29,6 +29,7 @@ struct Pins {
   Pin_t THERMISTOR = A2; // Analog input for thermistor
   Pin_t BLUETOOTH_RX = 3;
   Pin_t BLUETOOTH_TX = 4;
+  Pin_t BLUETOOTH_STATE = 7;
 } Pins;
 
 struct Temperature_t temps;
@@ -76,7 +77,7 @@ void loop() {
   // regulateBoostVoltage(&currentDutyCycle, BOOST_STD_OUTPUT, &OCR1A);
   
   // Measure thermistor temp readings
-  // measureTemperature(&temps);  // Pass in temperatures struct defined earlier in file
+  measureTemperature(&temps);  // Pass in temperatures struct defined earlier in file
   // Serial.print("Fahrenheit: ");
   // Serial.println(temps.F);
   // Serial.print("Celsius:    ");
@@ -84,8 +85,11 @@ void loop() {
   // Serial.print("Kelvin:     ");
   // Serial.println(temps.K);
   // Serial.println();
-  transmitBluetooth();
-  sendMessage();
+  String s = "Temperature (F): ";
+  s += temps.F;
+  if (bluetoothConnected()) {
+  transmitBluetooth(s);
+  }
 
   delay(1000); // Delay for next analog read
 }
@@ -99,6 +103,7 @@ void configurePins() {
   pinMode(Pins.THERMISTOR,  INPUT);
   pinMode(Pins.SOURCE,      INPUT);
   pinMode(Pins.PWM,         OUTPUT);
+  pinMode(Pins.BLUETOOTH_STATE, INPUT);
 }
 
 /// Configures the 16-bit timer on the ATmega328p using predefined macros.
@@ -140,4 +145,8 @@ Voltage_t measureBoostVoltage() {
   Voltage_t boostOutputVoltage = (Ref * (R5 + R6)) / R6 + D3;
   Serial.println(Ref);
   return boostOutputVoltage;
+}
+
+bool bluetoothConnected() {
+  return digitalRead(Pins.BLUETOOTH_STATE) == HIGH;
 }

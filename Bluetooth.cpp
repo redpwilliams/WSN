@@ -9,27 +9,10 @@ void configureBluetooth() {
   BTserial.begin(9600);
 }
 
-void transmitBluetooth() {
+void transmitBluetooth(String message) {
 
-  // Read incoming data
-  int bytesAvailable = BTserial.available();
-  for (int i = 0; i < bytesAvailable; i++) {
-    byte x = BTserial.read();
-    Serial.write(x);
+  BTserial.println(message);
+  for (int i = 0; i < 30; i++) {
+    delay(1000);
   }
-
-  // Print out an extra line
-  if (bytesAvailable) {
-    Serial.write('\n');
-  }
-
-  // Send outgoing data
-  int serialBytesAvailable = Serial.available();
-  for (int i = 0; i < serialBytesAvailable; i++) {
-    byte y = Serial.read();
-    BTserial.write(y);
-  }
-}
-
-void sendMessage() {
 }

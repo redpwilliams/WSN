@@ -2,7 +2,6 @@
 #define BLUETOOTH_HPP
 
 void configureBluetooth();
-void transmitBluetooth();
-void sendMessage();
+void transmitBluetooth(String message);
 
 #endif
